@@ -1,18 +1,18 @@
 const { Pool } = require("pg");
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  host: "aws-1-us-east-1.pooler.supabase.com",
+  port: 6543,
+  database: "postgres",
+  user: "postgres.lrvvggpucauzbqevwkeq",
+  password: "azdUbNPIZFKUbHJG",
   ssl: {
-    rejectUnauthorized: false, // ← fixes self-signed cert error
+    rejectUnauthorized: false,
   },
 });
 
 const connectDB = async () => {
   try {
-    if (!process.env.DATABASE_URL) {
-      throw new Error("DATABASE_URL is not defined in environment variables");
-    }
-
     console.log("Attempting to connect to PostgreSQL...");
 
     const client = await pool.connect();

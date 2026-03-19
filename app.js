@@ -4,6 +4,9 @@ const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
 const listEndpoints = require("express-list-endpoints");
 require("dotenv").config();
+const { router: AuthRoutes } = require("./routes/auth.routes"); // ← destructure router
+const CustomerRoutes = require("./routes/customer.routes");
+const VendorRoutes = require("./routes/vendor.routes");
 
 const app = express();
 
@@ -11,18 +14,6 @@ const app = express();
    Database
 ======================= */
 const { connectDB } = require("./config/db");
-
-/* =======================
-   Routes
-======================= */
-// const UserRoutes = require("./routes/Users.routes");
-// const Banner = require("./routes/Banner.routes");
-// const Category = require("./routes/category.routes");
-// const Products = require("./routes/product.routes");
-// const SubCategory = require("./routes/subCategory.routes");
-// const Cart = require("./routes/cart.routes");
-// const Vendor = require("./routes/vender.routes");
-// const Order = require("./routes/order.routes");
 
 /* =======================
    Middleware
@@ -43,16 +34,10 @@ app.get("/", (req, res) => {
 /* =======================
    API Routes
 ======================= */
-// app.use("/api/auth", UserRoutes);
-// app.use("/api/user", UserRoutes);
-// app.use("/api/ads", Banner);
-// app.use("/api/category", Category);
-// app.use("/api/subcategory", SubCategory);
-// app.use("/api/product", Products);
-// app.use("/api/vendor", Vendor);
-// app.use("/api/cart", Cart);
-// app.use("/api/order", Order);
-// app.use("/api/payment", paymentRoutes);
+
+app.use("/api/auth", AuthRoutes);
+app.use("/api/customers", CustomerRoutes);
+app.use("/api/vendors", VendorRoutes);
 
 /* =======================
    Route Listing API (DEV ONLY)
@@ -83,7 +68,7 @@ const startServer = async () => {
         const routes = listEndpoints(app);
         routes.forEach((route, index) => {
           console.log(
-            `${index + 1}. ${route.methods.join(", ").padEnd(8)} ${route.path}`
+            `${index + 1}. ${route.methods.join(", ").padEnd(8)} ${route.path}`,
           );
         });
 

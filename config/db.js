@@ -1,29 +1,38 @@
-const mongoose = require("mongoose");
+const { Pool } = require("pg");
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl:
+    process.env.NODE_ENV === "production"
+      ? { rejectUnauthorized: false }
+      : false,
+});
 
 const connectDB = async () => {
   try {
-    if (!process.env.MONGODB_URI) {
-      throw new Error("MONGODB_URI is not defined in environment variables");
+    if (!process.env.DATABASE_URL) {
+      throw new Error("DATABASE_URL is not defined in environment variables");
     }
 
-    console.log("Attempting to connect to MongoDB...");
+    console.log("Attempting to connect to PostgreSQL...");
 
-    const conn = await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      dbName: "test", // force test DB
-    });
+    const client = await pool.connect();
+    const res = await client.query(
+      "SELECT current_database(), inet_server_addr(), version()",
+    );
+    const { current_database, inet_server_addr, version } = res.rows[0];
 
-    console.log("✅ MongoDB connected!");
-    console.log("   Host:", conn.connection.host);
-    console.log("   DB:", conn.connection.name);
-    console.log("   Full URI:", conn.connection._connectionString);
+    console.log("✅ PostgreSQL connected!");
+    console.log("   Host:", inet_server_addr || "localhost");
+    console.log("   DB:", current_database);
+    console.log("   Version:", version.split(" ").slice(0, 2).join(" "));
 
-    return conn;
+    client.release();
+    return pool;
   } catch (error) {
-    console.error("MongoDB connection error:", error.message);
+    console.error("PostgreSQL connection error:", error.message);
     process.exit(1);
   }
 };
 
-module.exports = connectDB;
+module.exports = { connectDB, pool };

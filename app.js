@@ -2,7 +2,6 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
-const paymentRoutes = require("./routes/payment.routes");
 const listEndpoints = require("express-list-endpoints");
 require("dotenv").config();
 
@@ -11,19 +10,20 @@ const app = express();
 /* =======================
    Database
 ======================= */
-const connectDB = require("./config/db");
+const { connectDB } = require("./config/db");
 
 /* =======================
    Routes
 ======================= */
-const UserRoutes = require("./routes/Users.routes");
-const Banner = require("./routes/Banner.routes");
-const Category = require("./routes/category.routes");
-const Products = require("./routes/product.routes");
-const SubCategory = require("./routes/subCategory.routes");
-const Cart = require("./routes/cart.routes");
-const Vendor = require("./routes/vender.routes");
-const Order = require("./routes/order.routes");
+// const UserRoutes = require("./routes/Users.routes");
+// const Banner = require("./routes/Banner.routes");
+// const Category = require("./routes/category.routes");
+// const Products = require("./routes/product.routes");
+// const SubCategory = require("./routes/subCategory.routes");
+// const Cart = require("./routes/cart.routes");
+// const Vendor = require("./routes/vender.routes");
+// const Order = require("./routes/order.routes");
+
 /* =======================
    Middleware
 ======================= */
@@ -37,25 +37,25 @@ app.use(express.urlencoded({ extended: true }));
    Health Check
 ======================= */
 app.get("/", (req, res) => {
-  res.send("You are connected to Minutos server");
+  res.send("You are connected to partner server");
 });
 
 /* =======================
    API Routes
 ======================= */
-app.use("/api/auth", UserRoutes);
-app.use("/api/user", UserRoutes);
-app.use("/api/ads", Banner);
-app.use("/api/category", Category);
-app.use("/api/subcategory", SubCategory);
-app.use("/api/product", Products);
-app.use("/api/vendor", Vendor);
-app.use("/api/cart", Cart);
-app.use("/api/order", Order);
-app.use("/api/payment", paymentRoutes);
+// app.use("/api/auth", UserRoutes);
+// app.use("/api/user", UserRoutes);
+// app.use("/api/ads", Banner);
+// app.use("/api/category", Category);
+// app.use("/api/subcategory", SubCategory);
+// app.use("/api/product", Products);
+// app.use("/api/vendor", Vendor);
+// app.use("/api/cart", Cart);
+// app.use("/api/order", Order);
+// app.use("/api/payment", paymentRoutes);
 
 /* =======================
-   🔥 ADD THIS: Route Listing API (DEV ONLY)
+   Route Listing API (DEV ONLY)
 ======================= */
 if (process.env.NODE_ENV !== "production") {
   app.get("/api/routes", (req, res) => {
@@ -64,34 +64,37 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 /* =======================
-   Database Connection
-======================= */
-connectDB();
-
-/* =======================
    Server Start
 ======================= */
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`🌐 Base URL: http://localhost:${PORT}`);
+const startServer = async () => {
+  try {
+    // Connect to PostgreSQL first
+    await connectDB();
 
-  /* =======================
-     List All Routes (Console)
-  ======================= */
-  if (process.env.NODE_ENV !== "production") {
-    console.log("\n📂 ========== AVAILABLE ROUTES ==========\n");
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`🌐 Base URL: http://localhost:${PORT}`);
 
-    const routes = listEndpoints(app);
+      if (process.env.NODE_ENV !== "production") {
+        console.log("\n📂 ========== AVAILABLE ROUTES ==========\n");
 
-    routes.forEach((route, index) => {
-      console.log(
-        `${index + 1}. ${route.methods.join(", ").padEnd(8)} ${route.path}`,
-      );
+        const routes = listEndpoints(app);
+        routes.forEach((route, index) => {
+          console.log(
+            `${index + 1}. ${route.methods.join(", ").padEnd(8)} ${route.path}`
+          );
+        });
+
+        console.log(`\n✅ Total Routes: ${routes.length}`);
+        console.log("\n========================================\n");
+      }
     });
-
-    console.log(`\n✅ Total Routes: ${routes.length}`);
-    console.log("\n========================================\n");
+  } catch (error) {
+    console.error("❌ Failed to start server:", error.message);
+    process.exit(1);
   }
-});
+};
+
+startServer();

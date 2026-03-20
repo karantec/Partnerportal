@@ -6,6 +6,7 @@ const VALID_ROLES = [
   "customer_admin",
   "vendor_admin",
   "super_admin",
+  "company_admin",
 ];
 
 // ─── Protect any logged in user ───────────────────────────

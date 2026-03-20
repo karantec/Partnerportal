@@ -13,7 +13,7 @@ const User = {
       ) RETURNING *;
     `;
     const values = [
-      data.customerNo || data.vendorNo || null, // $1  ref_no
+      data.partnerno || null, // $1  ref_no
       data.name, // $2  name
       data.name2 || null, // $3  name2
       data.address || null, // $4  address

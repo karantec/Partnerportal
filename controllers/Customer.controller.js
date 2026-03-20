@@ -2,31 +2,72 @@ const User = require("../models/Authorization.model");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
+const VALID_ROLES = [
+  "customer",
+  "vendor",
+  "customer_admin",
+  "vendor_admin",
+  "super_admin",
+];
+
 // ─── Generate Token ───────────────────────────────────────
-const generateToken = (user) => {
-  return jwt.sign(
-    { id: user.id, name: user.name, email: user.email, role: user.role },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN || "30d" },
-  );
+const generateToken = (payload) => {
+  try {
+    return jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRES_IN || "30d",
+    });
+  } catch (error) {
+    return null;
+  }
 };
 
 // ─── Register ─────────────────────────────────────────────
-const register = (role) => async (req, res) => {
+const register = async (req, res) => {
   try {
-    // Check duplicate ref_no
+    const role = req.body.role;
+
+    if (!role || !VALID_ROLES.includes(role)) {
+      return res.status(400).json({
+        success: false,
+        message: `Role is required. Allowed: ${VALID_ROLES.join(", ")}`,
+      });
+    }
+
+    // ─── super_admin cannot register via this API ─────────
+    if (role === "super_admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Super admin cannot be registered via this API",
+      });
+    }
+
+    if (!req.body.name) {
+      return res.status(400).json({
+        success: false,
+        message: "Name is required",
+      });
+    }
+
+    if (!req.body.password) {
+      return res.status(400).json({
+        success: false,
+        message: "Password is required",
+      });
+    }
+
+    // ─── Check duplicate ref_no ───────────────────────────
     const refNo = req.body.customerNo || req.body.vendorNo;
     if (refNo) {
       const existing = await User.findByRefNo(refNo);
       if (existing) {
         return res.status(400).json({
           success: false,
-          message: `${role} reference number already exists`,
+          message: "Reference number already exists",
         });
       }
     }
 
-    // Check duplicate email
+    // ─── Check duplicate email ────────────────────────────
     if (req.body.email) {
       const existingEmail = await User.findByEmail(req.body.email);
       if (existingEmail) {
@@ -37,25 +78,33 @@ const register = (role) => async (req, res) => {
       }
     }
 
-    // Hash password
-    if (!req.body.password) {
-      return res.status(400).json({
+    // ─── Generate token FIRST ─────────────────────────────
+    const token = generateToken({
+      name: req.body.name,
+      email: req.body.email || null,
+      refNo: refNo || null,
+      role: role,
+    });
+
+    if (!token) {
+      return res.status(500).json({
         success: false,
-        message: "Password is required",
+        message: "Token generation failed. Registration aborted.",
       });
     }
+
+    // ─── Hash password ────────────────────────────────────
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
+    // ─── Save to DB ───────────────────────────────────────
     const user = await User.create(
       { ...req.body, password: hashedPassword },
       role,
     );
-    const token = generateToken(user);
 
-    // Remove password from response
     const { password, ...userWithoutPassword } = user;
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: `${role} registered successfully`,
       token,
@@ -66,8 +115,8 @@ const register = (role) => async (req, res) => {
   }
 };
 
-// ─── Login ────────────────────────────────────────────────
-const login = (role) => async (req, res) => {
+// ─── Single Login for ALL roles ───────────────────────────
+const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -78,16 +127,14 @@ const login = (role) => async (req, res) => {
       });
     }
 
-    // Find user with password
     const user = await User.findByEmailWithPassword(email);
-    if (!user || user.role !== role) {
+    if (!user) {
       return res.status(401).json({
         success: false,
         message: "Invalid email or password",
       });
     }
 
-    // Compare password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({
@@ -96,12 +143,19 @@ const login = (role) => async (req, res) => {
       });
     }
 
-    const token = generateToken(user);
+    const token = generateToken({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    });
+
     const { password: pwd, ...userWithoutPassword } = user;
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      message: `${role} logged in successfully`,
+      message: `${user.role} logged in successfully`,
+      role: user.role,
       token,
       data: userWithoutPassword,
     });
@@ -111,10 +165,22 @@ const login = (role) => async (req, res) => {
 };
 
 // ─── Get All ──────────────────────────────────────────────
-const getAll = (role) => async (req, res) => {
+const getAll = async (req, res) => {
   try {
-    const users = await User.findAll(role);
-    res.status(200).json({ success: true, data: users });
+    const { role } = req.user;
+    let users;
+
+    if (role === "super_admin") {
+      users = await User.findAll(null); // sees everyone
+    } else if (role === "customer_admin") {
+      users = await User.findAllByRoles(["customer", "customer_admin"]);
+    } else if (role === "vendor_admin") {
+      users = await User.findAllByRoles(["vendor", "vendor_admin"]);
+    } else {
+      users = await User.findAll(role); // own role only
+    }
+
+    res.status(200).json({ success: true, count: users.length, data: users });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -129,7 +195,36 @@ const getById = async (req, res) => {
         .status(404)
         .json({ success: false, message: "User not found" });
     }
-    res.status(200).json({ success: true, data: user });
+
+    const { role, id } = req.user;
+
+    // super_admin sees everyone
+    if (role === "super_admin") {
+      return res.status(200).json({ success: true, data: user });
+    }
+
+    // customer_admin sees customers
+    if (
+      role === "customer_admin" &&
+      ["customer", "customer_admin"].includes(user.role)
+    ) {
+      return res.status(200).json({ success: true, data: user });
+    }
+
+    // vendor_admin sees vendors
+    if (
+      role === "vendor_admin" &&
+      ["vendor", "vendor_admin"].includes(user.role)
+    ) {
+      return res.status(200).json({ success: true, data: user });
+    }
+
+    // own profile only
+    if (id === user.id) {
+      return res.status(200).json({ success: true, data: user });
+    }
+
+    return res.status(403).json({ success: false, message: "Access denied" });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -159,6 +254,21 @@ const update = async (req, res) => {
         .status(404)
         .json({ success: false, message: "User not found" });
     }
+
+    const { role, id } = req.user;
+
+    if (
+      role !== "super_admin" &&
+      role !== "customer_admin" &&
+      role !== "vendor_admin" &&
+      id !== user.id
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. You can only update your own profile",
+      });
+    }
+
     const updated = await User.update(req.params.id, req.body);
     res.status(200).json({ success: true, data: updated });
   } catch (error) {

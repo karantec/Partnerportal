@@ -1,5 +1,14 @@
 const jwt = require("jsonwebtoken");
 
+const VALID_ROLES = [
+  "customer",
+  "vendor",
+  "customer_admin",
+  "vendor_admin",
+  "super_admin",
+];
+
+// ─── Protect any logged in user ───────────────────────────
 const protect = (req, res, next) => {
   try {
     let token;
@@ -46,10 +55,8 @@ const protectRegister = (req, res, next) => {
       });
     }
 
-    // ─── Verify token ──────────────────────────────────────
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // ─── Check purpose ─────────────────────────────────────
     if (decoded.purpose !== "registration") {
       return res.status(403).json({
         success: false,
@@ -57,7 +64,6 @@ const protectRegister = (req, res, next) => {
       });
     }
 
-    // ─── Check secret key inside token is still valid ──────
     const {
       getCurrentSecretKey,
       getSecretKeyExpiry,
@@ -73,7 +79,6 @@ const protectRegister = (req, res, next) => {
       });
     }
 
-    // ─── Check if secret key has expired ───────────────────
     if (Date.now() > expiry) {
       return res.status(401).json({
         success: false,
@@ -82,7 +87,6 @@ const protectRegister = (req, res, next) => {
       });
     }
 
-    // ─── Match secret key inside token vs current key ──────
     if (decoded.secretKey !== currentKey) {
       return res.status(401).json({
         success: false,
@@ -107,6 +111,7 @@ const protectRegister = (req, res, next) => {
   }
 };
 
+// ─── Authorize specific roles ──────────────────────────────
 const authorizeRoles = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
@@ -119,4 +124,58 @@ const authorizeRoles = (...roles) => {
   };
 };
 
-module.exports = { protect, protectRegister, authorizeRoles };
+// ─── Super Admin only ──────────────────────────────────────
+const isSuperAdmin = (req, res, next) => {
+  if (req.user.role !== "super_admin") {
+    return res.status(403).json({
+      success: false,
+      message: "Access denied. Super admin only",
+    });
+  }
+  next();
+};
+
+// ─── Any admin ─────────────────────────────────────────────
+const isAnyAdmin = (req, res, next) => {
+  if (
+    !["customer_admin", "vendor_admin", "super_admin"].includes(req.user.role)
+  ) {
+    return res.status(403).json({
+      success: false,
+      message: "Access denied. Admin access required",
+    });
+  }
+  next();
+};
+
+// ─── Customer side ─────────────────────────────────────────
+const isCustomerSide = (req, res, next) => {
+  if (!["customer", "customer_admin", "super_admin"].includes(req.user.role)) {
+    return res.status(403).json({
+      success: false,
+      message: "Access denied. Customer access required",
+    });
+  }
+  next();
+};
+
+// ─── Vendor side ───────────────────────────────────────────
+const isVendorSide = (req, res, next) => {
+  if (!["vendor", "vendor_admin", "super_admin"].includes(req.user.role)) {
+    return res.status(403).json({
+      success: false,
+      message: "Access denied. Vendor access required",
+    });
+  }
+  next();
+};
+
+module.exports = {
+  protect,
+  protectRegister,
+  authorizeRoles,
+  isSuperAdmin,
+  isAnyAdmin,
+  isCustomerSide,
+  isVendorSide,
+};

@@ -5,9 +5,9 @@ const cookieParser = require("cookie-parser");
 const listEndpoints = require("express-list-endpoints");
 require("dotenv").config();
 const { router: AuthRoutes } = require("./routes/auth.routes"); // ← destructure router
-const CustomerRoutes = require("./routes/customer.routes");
-const VendorRoutes = require("./routes/vendor.routes");
+
 const ItemRoutes = require("./routes/item.routes");
+const ContactRoutes = require("./routes/contact.routes");
 const app = express();
 
 /* =======================
@@ -36,9 +36,9 @@ app.get("/", (req, res) => {
 ======================= */
 
 app.use("/api/auth", AuthRoutes);
-app.use("/api/customers", CustomerRoutes);
-app.use("/api/vendors", VendorRoutes);
+
 app.use("/api/vendor/item", ItemRoutes);
+app.use("/api/contact", ContactRoutes);
 /* =======================
    Route Listing API (DEV ONLY)
 ======================= */

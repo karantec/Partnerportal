@@ -1,0 +1,175 @@
+const { pool } = require("../config/db");
+
+const Contact = {
+  // ─── Create ───────────────────────────────────────────
+  async create(data, userId) {
+    const query = `
+      INSERT INTO contacts (
+        contact_no, contact_name, email, phone_no, mobile_phone_no,
+        company_no, company_name, portal_user, portal_admin,
+        partner_type, partner_no, ship_to_code, vendor_location_code,
+        location_code, address, address2, city, post_code,
+        country_region_code, job_title, language_code,
+        sync_status, last_synced_date_time, created_by
+      ) VALUES (
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,
+        $14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24
+      ) RETURNING *;
+    `;
+    const values = [
+      data.contactNo || null, // $1
+      data.contactName, // $2
+      data.eMail || null, // $3
+      data.phoneNo || null, // $4
+      data.mobilePhoneNo || null, // $5
+      data.companyNo || null, // $6
+      data.companyName || null, // $7
+      data.portalUser || false, // $8
+      data.portalAdmin || false, // $9
+      data.partnerType || null, // $10
+      data.partnerNo || null, // $11
+      data.shipToCode || null, // $12
+      data.vendorLocationCode || null, // $13
+      data.locationCode || null, // $14
+      data.address || null, // $15
+      data.address2 || null, // $16
+      data.city || null, // $17
+      data.postCode || null, // $18
+      data.countryRegionCode || null, // $19
+      data.jobTitle || null, // $20
+      data.languageCode || null, // $21
+      data.syncStatus || "Pending", // $22
+      data.lastSyncedDateTime || null, // $23
+      userId || null, // $24
+    ];
+    const result = await pool.query(query, values);
+    return result.rows[0];
+  },
+
+  // ─── Find All ──────────────────────────────────────────
+  async findAll() {
+    const result = await pool.query(
+      "SELECT * FROM contacts ORDER BY created_at DESC",
+    );
+    return result.rows;
+  },
+
+  // ─── Find by ID ────────────────────────────────────────
+  async findById(id) {
+    const result = await pool.query("SELECT * FROM contacts WHERE id = $1", [
+      id,
+    ]);
+    return result.rows[0] || null;
+  },
+
+  // ─── Find by Contact No ────────────────────────────────
+  async findByContactNo(contactNo) {
+    const result = await pool.query(
+      "SELECT * FROM contacts WHERE contact_no = $1",
+      [contactNo],
+    );
+    return result.rows[0] || null;
+  },
+
+  // ─── Find by Partner No ────────────────────────────────
+  async findByPartnerNo(partnerNo) {
+    const result = await pool.query(
+      "SELECT * FROM contacts WHERE partner_no = $1 ORDER BY created_at DESC",
+      [partnerNo],
+    );
+    return result.rows;
+  },
+
+  // ─── Find by Company No ────────────────────────────────
+  async findByCompanyNo(companyNo) {
+    const result = await pool.query(
+      "SELECT * FROM contacts WHERE company_no = $1 ORDER BY created_at DESC",
+      [companyNo],
+    );
+    return result.rows;
+  },
+
+  // ─── Find by Sync Status ───────────────────────────────
+  async findBySyncStatus(syncStatus) {
+    const result = await pool.query(
+      "SELECT * FROM contacts WHERE sync_status = $1 ORDER BY created_at DESC",
+      [syncStatus],
+    );
+    return result.rows;
+  },
+
+  // ─── Update ────────────────────────────────────────────
+  async update(id, data) {
+    const query = `
+      UPDATE contacts SET
+        contact_no=$1, contact_name=$2, email=$3, phone_no=$4,
+        mobile_phone_no=$5, company_no=$6, company_name=$7,
+        portal_user=$8, portal_admin=$9, partner_type=$10,
+        partner_no=$11, ship_to_code=$12, vendor_location_code=$13,
+        location_code=$14, address=$15, address2=$16, city=$17,
+        post_code=$18, country_region_code=$19, job_title=$20,
+        language_code=$21, sync_status=$22, last_synced_date_time=$23,
+        updated_at=NOW()
+      WHERE id=$24 RETURNING *;
+    `;
+    const values = [
+      data.contactNo || null, // $1
+      data.contactName, // $2
+      data.eMail || null, // $3
+      data.phoneNo || null, // $4
+      data.mobilePhoneNo || null, // $5
+      data.companyNo || null, // $6
+      data.companyName || null, // $7
+      data.portalUser || false, // $8
+      data.portalAdmin || false, // $9
+      data.partnerType || null, // $10
+      data.partnerNo || null, // $11
+      data.shipToCode || null, // $12
+      data.vendorLocationCode || null, // $13
+      data.locationCode || null, // $14
+      data.address || null, // $15
+      data.address2 || null, // $16
+      data.city || null, // $17
+      data.postCode || null, // $18
+      data.countryRegionCode || null, // $19
+      data.jobTitle || null, // $20
+      data.languageCode || null, // $21
+      data.syncStatus || "Pending", // $22
+      data.lastSyncedDateTime || null, // $23
+      id, // $24
+    ];
+    const result = await pool.query(query, values);
+    return result.rows[0] || null;
+  },
+
+  // ─── Update Sync Status ────────────────────────────────
+  async updateSyncStatus(id, syncStatus) {
+    const result = await pool.query(
+      `UPDATE contacts SET sync_status=$1, last_synced_date_time=NOW(), updated_at=NOW()
+       WHERE id=$2 RETURNING *`,
+      [syncStatus, id],
+    );
+    return result.rows[0] || null;
+  },
+
+  // ─── Update Portal Access ──────────────────────────────
+  async updatePortalAccess(id, portalUser, portalAdmin) {
+    const result = await pool.query(
+      `UPDATE contacts SET portal_user=$1, portal_admin=$2, updated_at=NOW()
+       WHERE id=$3 RETURNING *`,
+      [portalUser, portalAdmin, id],
+    );
+    return result.rows[0] || null;
+  },
+
+  // ─── Delete ────────────────────────────────────────────
+  async delete(id) {
+    const result = await pool.query(
+      "DELETE FROM contacts WHERE id = $1 RETURNING *",
+      [id],
+    );
+    return result.rows[0] || null;
+  },
+};
+
+module.exports = Contact;

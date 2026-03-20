@@ -10,33 +10,63 @@ const {
   updateItemBlock,
   deleteItemRequest,
 } = require("../controllers/Item.Controller");
-const { protect, authorizeRoles } = require("../middleware/auth.middleware");
+const {
+  protect,
+  authorizeRoles,
+  isSuperAdmin,
+  isVendorSide,
+} = require("../middleware/auth.middleware");
 
-// ─── Vendor + Admin ───────────────────────────────────────
-router.post("/", protect, authorizeRoles("vendor", "admin"), createItemRequest);
-router.get("/", protect, authorizeRoles("vendor", "admin"), getAllItemRequests);
+// ─── Vendor + Vendor Admin + Super Admin ──────────────────
+router.post(
+  "/",
+  protect,
+  authorizeRoles("vendor", "vendor_admin", "super_admin"),
+  createItemRequest,
+);
+router.get(
+  "/",
+  protect,
+  authorizeRoles("vendor", "vendor_admin", "super_admin"),
+  getAllItemRequests,
+);
 router.get(
   "/partner/:partnerNo",
   protect,
-  authorizeRoles("vendor", "admin"),
+  authorizeRoles("vendor", "vendor_admin", "super_admin"),
   getItemsByPartner,
 );
 router.get(
   "/:id",
   protect,
-  authorizeRoles("vendor", "admin"),
+  authorizeRoles("vendor", "vendor_admin", "super_admin"),
   getItemRequestById,
 );
 router.put(
   "/:id",
   protect,
-  authorizeRoles("vendor", "admin"),
+  authorizeRoles("vendor", "vendor_admin", "super_admin"),
   updateItemRequest,
 );
 
-// ─── Admin Only ───────────────────────────────────────────
-router.patch("/:id/status", protect, authorizeRoles("admin"), updateItemStatus);
-router.patch("/:id/block", protect, authorizeRoles("admin"), updateItemBlock);
-router.delete("/:id", protect, authorizeRoles("admin"), deleteItemRequest);
+// ─── Vendor Admin + Super Admin Only ─────────────────────
+router.patch(
+  "/:id/status",
+  protect,
+  authorizeRoles("vendor", "vendor_admin", "super_admin"),
+  updateItemStatus,
+);
+router.patch(
+  "/:id/block",
+  protect,
+  authorizeRoles("vendor", "vendor_admin", "super_admin"),
+  updateItemBlock,
+);
+router.delete(
+  "/:id",
+  protect,
+  authorizeRoles("super_admin"),
+  deleteItemRequest,
+);
 
 module.exports = router;

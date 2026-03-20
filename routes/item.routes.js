@@ -24,6 +24,8 @@ router.post(
   authorizeRoles("vendor", "vendor_admin", "super_admin"),
   createItemRequest,
 );
+
+router.post("/", protect, createItemRequest);
 router.get(
   "/",
   protect,

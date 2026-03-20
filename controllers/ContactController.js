@@ -1,7 +1,6 @@
 const Contact = require("../models/Contact.model");
 
 // ─── Create Contact ────────────────────────────────────────
-// POST /api/contacts
 const createContact = async (req, res) => {
   try {
     if (!req.body.contactName) {
@@ -11,7 +10,7 @@ const createContact = async (req, res) => {
       });
     }
 
-    // Check duplicate contactNo
+    // ─── Check duplicate contactNo ─────────────────────────
     if (req.body.contactNo) {
       const existing = await Contact.findByContactNo(req.body.contactNo);
       if (existing) {
@@ -34,15 +33,13 @@ const createContact = async (req, res) => {
 };
 
 // ─── Get All Contacts ──────────────────────────────────────
-// GET /api/contacts
-// GET /api/contacts?syncStatus=Pending
-// GET /api/contacts?partnerNo=40000
-// GET /api/contacts?companyNo=CT000019
 const getAllContacts = async (req, res) => {
   try {
     const { syncStatus, partnerNo, companyNo } = req.query;
+    const { role } = req.user;
 
     let contacts;
+
     if (syncStatus) {
       contacts = await Contact.findBySyncStatus(syncStatus);
     } else if (partnerNo) {
@@ -51,6 +48,11 @@ const getAllContacts = async (req, res) => {
       contacts = await Contact.findByCompanyNo(companyNo);
     } else {
       contacts = await Contact.findAll();
+    }
+
+    // ─── customer sees only their own contacts ─────────────
+    if (role === "customer") {
+      contacts = contacts.filter((c) => c.created_by === req.user.id);
     }
 
     res.status(200).json({
@@ -64,7 +66,6 @@ const getAllContacts = async (req, res) => {
 };
 
 // ─── Get Contact by ID ─────────────────────────────────────
-// GET /api/contacts/:id
 const getContactById = async (req, res) => {
   try {
     const contact = await Contact.findById(req.params.id);
@@ -74,6 +75,15 @@ const getContactById = async (req, res) => {
         message: "Contact not found",
       });
     }
+
+    // ─── customer sees only own contacts ───────────────────
+    if (req.user.role === "customer" && contact.created_by !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied",
+      });
+    }
+
     res.status(200).json({ success: true, data: contact });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -81,7 +91,6 @@ const getContactById = async (req, res) => {
 };
 
 // ─── Get Contacts by Partner No ────────────────────────────
-// GET /api/contacts/partner/:partnerNo
 const getContactsByPartner = async (req, res) => {
   try {
     const contacts = await Contact.findByPartnerNo(req.params.partnerNo);
@@ -96,7 +105,6 @@ const getContactsByPartner = async (req, res) => {
 };
 
 // ─── Update Contact ────────────────────────────────────────
-// PUT /api/contacts/:id
 const updateContact = async (req, res) => {
   try {
     const contact = await Contact.findById(req.params.id);
@@ -107,7 +115,15 @@ const updateContact = async (req, res) => {
       });
     }
 
-    // Check duplicate contactNo if changed
+    // ─── customer can only update own contacts ─────────────
+    if (req.user.role === "customer" && contact.created_by !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. You can only update your own contacts",
+      });
+    }
+
+    // ─── Check duplicate contactNo if changed ──────────────
     if (req.body.contactNo && req.body.contactNo !== contact.contact_no) {
       const existing = await Contact.findByContactNo(req.body.contactNo);
       if (existing) {
@@ -129,8 +145,7 @@ const updateContact = async (req, res) => {
   }
 };
 
-// ─── Update Sync Status ────────────────────────────────────
-// PATCH /api/contacts/:id/sync
+// ─── Update Sync Status (customer_admin + super_admin) ─────
 const updateSyncStatus = async (req, res) => {
   try {
     const { syncStatus } = req.body;
@@ -162,8 +177,7 @@ const updateSyncStatus = async (req, res) => {
   }
 };
 
-// ─── Update Portal Access ──────────────────────────────────
-// PATCH /api/contacts/:id/portal
+// ─── Update Portal Access (customer_admin + super_admin) ───
 const updatePortalAccess = async (req, res) => {
   try {
     const { portalUser, portalAdmin } = req.body;
@@ -198,8 +212,7 @@ const updatePortalAccess = async (req, res) => {
   }
 };
 
-// ─── Delete Contact ────────────────────────────────────────
-// DELETE /api/contacts/:id
+// ─── Delete Contact (customer_admin + super_admin) ─────────
 const deleteContact = async (req, res) => {
   try {
     const contact = await Contact.findById(req.params.id);

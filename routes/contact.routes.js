@@ -12,46 +12,98 @@ const {
 } = require("../controllers/ContactController");
 const { protect, authorizeRoles } = require("../middleware/auth.middleware");
 
-// ─── Customer + Vendor + Admin ────────────────────────────
+// ─── Customer + Customer Admin + Super Admin ──────────────
 router.post(
   "/",
   protect,
-  authorizeRoles("customer", "vendor", "admin"),
+  authorizeRoles(
+    "customer",
+    "customer_admin",
+    "vendor",
+    "vendor_admin",
+    "super_admin",
+  ),
   createContact,
 );
 router.get(
   "/",
   protect,
-  authorizeRoles("customer", "vendor", "admin"),
+  authorizeRoles(
+    "customer",
+    "customer_admin",
+    "vendor",
+    "vendor_admin",
+    "super_admin",
+  ),
   getAllContacts,
 );
 router.get(
   "/partner/:partnerNo",
   protect,
-  authorizeRoles("customer", "vendor", "admin"),
+  authorizeRoles("customer", "vendor"),
   getContactsByPartner,
 );
 router.get(
   "/:id",
   protect,
-  authorizeRoles("customer", "vendor", "admin"),
+  authorizeRoles(
+    "customer",
+    "customer_admin",
+    "vendor",
+    "vendor_admin",
+    "super_admin",
+  ),
   getContactById,
 );
 router.put(
   "/:id",
   protect,
-  authorizeRoles("customer", "vendor", "admin"),
+  authorizeRoles(
+    "customer",
+    "customer_admin",
+    "vendor",
+    "vendor_admin",
+    "super_admin",
+  ),
   updateContact,
 );
 
-// ─── Admin Only ───────────────────────────────────────────
-router.patch("/:id/sync", protect, authorizeRoles("admin"), updateSyncStatus);
+// ─── Customer Admin + Super Admin Only ────────────────────
+router.patch(
+  "/:id/sync",
+  protect,
+  authorizeRoles(
+    "customer_admin",
+    "vendor",
+    "vendor_admin",
+    "customer",
+    "super_admin",
+  ),
+  updateSyncStatus,
+);
 router.patch(
   "/:id/portal",
   protect,
-  authorizeRoles("admin"),
+  authorizeRoles(
+    "customer_admin",
+    "vendor",
+    "vendor_admin",
+    "customer",
+    "super_admin",
+  ),
   updatePortalAccess,
 );
-router.delete("/:id", protect, authorizeRoles("admin"), deleteContact);
+router.delete(
+  "/:id",
+  protect,
+  authorizeRoles(
+    "customer_admin",
+    "vendor",
+    "vendor_admin",
+    "customer",
+    "super_admin",
+  ),
+  deleteContact,
+);
 
 module.exports = router;

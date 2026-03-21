@@ -9,6 +9,9 @@ const UserRoutes = require("./routes/user.routes");
 const ItemRoutes = require("./routes/item.routes");
 const ContactRoutes = require("./routes/contact.routes");
 const PurchaseOrderRoutes = require("./routes/purchaseOrder.routes");
+const SalesOrderRoutes = require("./routes/salesOrder.routes");
+
+const InvoiceRoutes = require("./routes/invoice.routes");
 const app = express();
 
 /* =======================
@@ -42,6 +45,9 @@ app.use("/api/vendor/item", ItemRoutes);
 app.use("/api/contact", ContactRoutes);
 
 app.use("/api/purchase-orders", PurchaseOrderRoutes);
+app.use("/api/sales-orders", SalesOrderRoutes);
+
+app.use("/api/invoices", InvoiceRoutes);
 /* =======================
    Route Listing API (DEV ONLY)
 ======================= */

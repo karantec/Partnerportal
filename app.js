@@ -8,6 +8,7 @@ const { router: AuthRoutes } = require("./routes/auth.routes"); // ← destructu
 const UserRoutes = require("./routes/user.routes");
 const ItemRoutes = require("./routes/item.routes");
 const ContactRoutes = require("./routes/contact.routes");
+const PurchaseOrderRoutes = require("./routes/purchaseOrder.routes");
 const app = express();
 
 /* =======================
@@ -39,6 +40,8 @@ app.use("/api/auth", AuthRoutes);
 app.use("/api/users", UserRoutes);
 app.use("/api/vendor/item", ItemRoutes);
 app.use("/api/contact", ContactRoutes);
+
+app.use("/api/purchase-orders", PurchaseOrderRoutes);
 /* =======================
    Route Listing API (DEV ONLY)
 ======================= */

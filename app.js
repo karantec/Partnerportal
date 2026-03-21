@@ -13,6 +13,9 @@ const SalesOrderRoutes = require("./routes/salesOrder.routes");
 
 const InvoiceRoutes = require("./routes/invoice.routes");
 const PurchaseInvoiceRoutes = require("./routes/purchaseInvoice.routes");
+
+const PurchaseReceiptRoutes = require("./routes/purchaseReceipt.routes");
+const PartnerLocationLinkRoutes = require("./routes/partnerLocationLink.routes");
 const app = express();
 
 /* =======================
@@ -51,6 +54,10 @@ app.use("/api/sales-orders", SalesOrderRoutes);
 app.use("/api/invoices", InvoiceRoutes);
 
 app.use("/api/purchase-invoices", PurchaseInvoiceRoutes);
+
+app.use("/api/purchase-receipts", PurchaseReceiptRoutes);
+
+app.use("/api/partner-location-links", PartnerLocationLinkRoutes);
 /* =======================
    Route Listing API (DEV ONLY)
 ======================= */

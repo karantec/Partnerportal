@@ -12,6 +12,7 @@ const PurchaseOrderRoutes = require("./routes/purchaseOrder.routes");
 const SalesOrderRoutes = require("./routes/salesOrder.routes");
 
 const InvoiceRoutes = require("./routes/invoice.routes");
+const PurchaseInvoiceRoutes = require("./routes/purchaseInvoice.routes");
 const app = express();
 
 /* =======================
@@ -48,6 +49,8 @@ app.use("/api/purchase-orders", PurchaseOrderRoutes);
 app.use("/api/sales-orders", SalesOrderRoutes);
 
 app.use("/api/invoices", InvoiceRoutes);
+
+app.use("/api/purchase-invoices", PurchaseInvoiceRoutes);
 /* =======================
    Route Listing API (DEV ONLY)
 ======================= */

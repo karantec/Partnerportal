@@ -28,7 +28,7 @@ const PurchaseOrder = {
         data.requestedDeliveryDate || null,
         data.currencyCode || null,
         data.externalDocumentNo || null,
-        data.status || "Processed",
+        data.status || null,
         data.direction || null,
         data.submittedDate || null,
         userId || null,

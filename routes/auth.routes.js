@@ -15,17 +15,17 @@ let secretKeyExpiry = null;
 router.post("/get-register-token", (req, res) => {
   try {
     currentSecretKey = crypto.randomBytes(32).toString("hex");
-    secretKeyExpiry = Date.now() + 15 * 60 * 1000;
+    secretKeyExpiry = Date.now() + 60 * 60 * 1000;
 
     const registerToken = jwt.sign(
       { purpose: "registration", secretKey: currentSecretKey },
       process.env.JWT_SECRET,
-      { expiresIn: "15m" },
+      { expiresIn: "60m" },
     );
 
     res.status(200).json({
       success: true,
-      message: "Register token generated. Valid for 15 minutes.",
+      message: "Register token generated. Valid for 60 minutes.",
       registerToken,
       expiresAt: new Date(secretKeyExpiry),
     });

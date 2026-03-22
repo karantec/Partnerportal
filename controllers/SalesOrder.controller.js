@@ -19,8 +19,8 @@ const createSalesOrder = async (req, res) => {
         message: "At least one order line is required",
       });
     }
-
-    const order = await SalesOrder.create(req.body, req.user.id);
+    const userId = req.user ? req.user.id : null;
+    const order = await SalesOrder.create(req.body, userId);
     res.status(201).json({
       success: true,
       message: "Sales order created successfully",

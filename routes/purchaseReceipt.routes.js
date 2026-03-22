@@ -20,7 +20,7 @@ router.post(
   createPurchaseReceipt,
 );
 router.post(
-  "/",
+  "/businesscentral",
   protectRegister,
   createPurchaseReceipt,
 );

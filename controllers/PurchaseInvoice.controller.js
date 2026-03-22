@@ -19,8 +19,9 @@ const createPurchaseInvoice = async (req, res) => {
         message: "At least one invoice line is required",
       });
     }
+    const userId = req.user ? req.user.id : null;
 
-    const invoice = await PurchaseInvoice.create(req.body, req.user.id);
+    const invoice = await PurchaseInvoice.create(req.body, userId);
     res.status(201).json({
       success: true,
       message: "Purchase invoice created successfully",

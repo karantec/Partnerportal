@@ -19,7 +19,7 @@ router.post(
   createSalesOrder,
 );
 router.post(
-  "/",
+  "/businesscentral",
   protectRegister,
   createSalesOrder,
 );

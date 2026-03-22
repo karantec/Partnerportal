@@ -20,7 +20,7 @@ router.post(
   createPurchaseInvoice,
 );
 router.post(
-  "/",
+  "/businesscentral",
   protectRegister,
   createPurchaseInvoice,
 );

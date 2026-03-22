@@ -19,8 +19,9 @@ const createPurchaseReceipt = async (req, res) => {
         message: "At least one delivery line is required",
       });
     }
+    const userId = req.user ? req.user.id : null;
 
-    const receipt = await PurchaseReceipt.create(req.body, req.user.id);
+    const receipt = await PurchaseReceipt.create(req.body, userId);
     res.status(201).json({
       success: true,
       message: "Purchase receipt created successfully",

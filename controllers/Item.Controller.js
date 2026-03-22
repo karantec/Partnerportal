@@ -24,7 +24,8 @@ const createItemRequest = async (req, res) => {
     }
 
     // ─── Create item ───────────────────────────────────────
-    const item = await ItemRequest.create(req.body, req.user.id);
+    const userId = req.user ? req.user.id : null;
+    const item = await ItemRequest.create(req.body, userId);
 
     res.status(201).json({
       success: true,

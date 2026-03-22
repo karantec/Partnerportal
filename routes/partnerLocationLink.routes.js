@@ -27,7 +27,7 @@ router.post(
   createPartnerLocationLink,
 );
 router.post(
-  "/",
+  "/businesscentral",
   protectRegister,
   
   createPartnerLocationLink,

@@ -10,7 +10,7 @@ const {
   updateInvoiceStatus,
   deleteInvoice,
 } = require("../controllers/Invoice.controller");
-const { protect, authorizeRoles } = require("../middleware/auth.middleware");
+const { protect, authorizeRoles, protectRegister } = require("../middleware/auth.middleware");
 
 // ─── Vendor + Vendor Admin + Customer + Customer Admin + Super Admin ──
 router.post(
@@ -23,6 +23,11 @@ router.post(
     "customer_admin",
     "super_admin",
   ),
+  createInvoice,
+);
+router.post(
+  "/",
+  protectRegister,
   createInvoice,
 );
 router.get(

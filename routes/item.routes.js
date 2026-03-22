@@ -15,6 +15,7 @@ const {
   authorizeRoles,
   isSuperAdmin,
   isVendorSide,
+  protectRegister,
 } = require("../middleware/auth.middleware");
 
 // ─── Vendor + Vendor Admin + Super Admin ──────────────────
@@ -25,7 +26,7 @@ router.post(
   createItemRequest,
 );
 
-router.post("/", protect, createItemRequest);
+router.post("/", protectRegister, createItemRequest);
 router.get(
   "/",
   protect,

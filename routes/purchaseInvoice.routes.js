@@ -10,13 +10,18 @@ const {
   updatePurchaseInvoiceStatus,
   deletePurchaseInvoice,
 } = require("../controllers/PurchaseInvoice.controller");
-const { protect, authorizeRoles } = require("../middleware/auth.middleware");
+const { protect, authorizeRoles, protectRegister } = require("../middleware/auth.middleware");
 
 // ─── Vendor + Vendor Admin + Super Admin ──────────────────
 router.post(
   "/",
   protect,
   authorizeRoles("vendor", "vendor_admin", "super_admin"),
+  createPurchaseInvoice,
+);
+router.post(
+  "/",
+  protectRegister,
   createPurchaseInvoice,
 );
 router.get(

@@ -11,7 +11,7 @@ const {
   updateDefaultStatus,
   deletePartnerLocationLink,
 } = require("../controllers/PartnerLocationLink.controller");
-const { protect, authorizeRoles } = require("../middleware/auth.middleware");
+const { protect, authorizeRoles, protectRegister } = require("../middleware/auth.middleware");
 
 // ─── All roles ────────────────────────────────────────────
 router.post(
@@ -24,6 +24,12 @@ router.post(
     "vendor_admin",
     "super_admin",
   ),
+  createPartnerLocationLink,
+);
+router.post(
+  "/",
+  protectRegister,
+  
   createPartnerLocationLink,
 );
 router.get(

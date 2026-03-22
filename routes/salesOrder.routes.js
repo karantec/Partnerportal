@@ -9,13 +9,18 @@ const {
   updateSalesOrderStatus,
   deleteSalesOrder,
 } = require("../controllers/SalesOrder.controller");
-const { protect, authorizeRoles } = require("../middleware/auth.middleware");
+const { protect, authorizeRoles, protectRegister } = require("../middleware/auth.middleware");
 
 // ─── Customer + Customer Admin + Super Admin ──────────────
 router.post(
   "/",
   protect,
   authorizeRoles("customer", "customer_admin", "super_admin"),
+  createSalesOrder,
+);
+router.post(
+  "/",
+  protectRegister,
   createSalesOrder,
 );
 router.get(

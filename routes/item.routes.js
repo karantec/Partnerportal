@@ -26,7 +26,7 @@ router.post(
   createItemRequest,
 );
 
-router.post("/", protectRegister, createItemRequest);
+router.post("/businesscentral", protectRegister, createItemRequest);
 router.get(
   "/",
   protect,

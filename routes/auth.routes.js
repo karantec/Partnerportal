@@ -43,22 +43,22 @@ router.post("/login", login);
 // POST /api/auth/create-super-admin
 router.post("/create-super-admin", async (req, res) => {
   try {
-    const { name, email, password, superAdminSecret } = req.body;
+    const { name, email, password } = req.body;
 
     // ─── Validate super admin secret ──────────────────────
-    if (!superAdminSecret) {
-      return res.status(400).json({
-        success: false,
-        message: "Super admin secret key is required",
-      });
-    }
+    // if (!superAdminSecret) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Super admin secret key is required",
+    //   });
+    // }
 
-    if (superAdminSecret !== process.env.SUPER_ADMIN_SECRET_KEY) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid super admin secret key",
-      });
-    }
+    // if (superAdminSecret !== process.env.SUPER_ADMIN_SECRET_KEY) {
+    //   return res.status(401).json({
+    //     success: false,
+    //     message: "Invalid super admin secret key",
+    //   });
+    // }
 
     if (!name || !email || !password) {
       return res.status(400).json({

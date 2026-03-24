@@ -47,6 +47,25 @@ Common roles: `customer`, `vendor`, `customer_admin`, `vendor_admin`, `super_adm
 
 Each endpoint enforces role access via middleware; see route files under `routes/`.
 
+### Business Central–style create routes
+
+These **`POST …/businesscentral`** endpoints use **`protectRegister`** (not the login JWT). Call **`POST /api/auth/get-register-token`** first, then send the registration token as:
+
+- `x-register-token: <registerToken>`  
+  or `Authorization: Bearer <registerToken>`
+
+The **JSON body** is the same as the corresponding **`POST /`** create on that resource (items, purchase orders, sales orders, invoices, purchase invoices, purchase receipts, partner location links).
+
+| Method | Path |
+|--------|------|
+| `POST` | `/api/vendor/item/businesscentral` |
+| `POST` | `/api/purchase-orders/businesscentral` |
+| `POST` | `/api/sales-orders/businesscentral` |
+| `POST` | `/api/invoices/businesscentral` |
+| `POST` | `/api/purchase-invoices/businesscentral` |
+| `POST` | `/api/purchase-receipts/businesscentral` |
+| `POST` | `/api/partner-location-links/businesscentral` |
+
 ---
 
 ## Health & utilities
@@ -103,7 +122,7 @@ No request body.
 ```json
 {
   "success": true,
-  "message": "Register token generated. Valid for 15 minutes.",
+  "message": "Register token generated. Valid for 60 minutes.",
   "registerToken": "<jwt>",
   "expiresAt": "2026-03-22T12:00:00.000Z"
 }
@@ -217,7 +236,8 @@ Prefix: `/api/vendor/item`
 
 | Method | Path | Auth | Notes |
 |--------|------|------|--------|
-| `POST` | `/` | Bearer | **Two registrations:** (1) `vendor`, `vendor_admin`, `super_admin`; (2) `protect` only — same path, different middleware |
+| `POST` | `/` | Bearer | `vendor`, `vendor_admin`, `super_admin` |
+| `POST` | `/businesscentral` | Register token | Same body as `POST /`; see [Business Central–style create routes](#business-centralstyle-create-routes) |
 | `GET` | `/` | Bearer | `vendor`, `vendor_admin`, `super_admin` |
 | `GET` | `/partner/:partnerNo` | Bearer | Same roles |
 | `GET` | `/:id` | Bearer | Same roles |
@@ -398,7 +418,8 @@ Prefix: `/api/purchase-orders`
 
 | Method | Path | Auth | Notes |
 |--------|------|------|--------|
-| `POST` | `/` | Bearer | **Two handlers:** (1) roles `vendor`, `vendor_admin`, `super_admin`; (2) `protect` only (no `authorizeRoles`) |
+| `POST` | `/` | Bearer | `vendor`, `vendor_admin`, `super_admin` |
+| `POST` | `/businesscentral` | Register token | Same body as `POST /`; see [Business Central–style create routes](#business-centralstyle-create-routes) |
 | `GET` | `/` | Bearer | `vendor`, `vendor_admin`, `super_admin` |
 | `GET` | `/partner/:partnerNo` | Bearer | Same |
 | `GET` | `/:id` | Bearer | Same |
@@ -483,6 +504,7 @@ Prefix: `/api/sales-orders`
 | Method | Path | Auth | Roles |
 |--------|------|------|--------|
 | `POST` | `/` | Bearer | `customer`, `customer_admin`, `super_admin` |
+| `POST` | `/businesscentral` | Register token | Same body as `POST /`; see [Business Central–style create routes](#business-centralstyle-create-routes) |
 | `GET` | `/` | Bearer | Same |
 | `GET` | `/partner/:partnerNo` | Bearer | Same |
 | `GET` | `/:id` | Bearer | Same |
@@ -543,6 +565,7 @@ Prefix: `/api/invoices`
 | Method | Path | Auth | Roles |
 |--------|------|------|--------|
 | `POST` | `/` | Bearer | `vendor`, `vendor_admin`, `customer`, `customer_admin`, `super_admin` |
+| `POST` | `/businesscentral` | Register token | Same body as `POST /`; see [Business Central–style create routes](#business-centralstyle-create-routes) |
 | `GET` | `/` | Bearer | Same |
 | `GET` | `/partner/:partnerNo` | Bearer | Same |
 | `GET` | `/no/:invoiceNo` | Bearer | Same |
@@ -631,7 +654,7 @@ Prefix: `/api/purchase-invoices`
 
 Same structure as **Invoices** (header + `portalInvoiceLine[]`), but routes restrict roles to **vendor-side**: `vendor`, `vendor_admin`, `super_admin` (see `purchaseInvoice.routes.js`).
 
-Paths: `/`, `/partner/:partnerNo`, `/no/:invoiceNo`, `/:id`, `PATCH /:id/status`, `DELETE /:id`.
+Paths: `/`, `/businesscentral`, `/partner/:partnerNo`, `/no/:invoiceNo`, `/:id`, `PATCH /:id/status`, `DELETE /:id`.
 
 **Example payload — `POST /api/purchase-invoices` & `PUT /api/purchase-invoices/:id`**
 
@@ -685,6 +708,7 @@ Prefix: `/api/purchase-receipts`
 | Method | Path | Auth | Roles |
 |--------|------|------|--------|
 | `POST` | `/` | Bearer | `vendor`, `vendor_admin`, `super_admin` |
+| `POST` | `/businesscentral` | Register token | Same body as `POST /`; see [Business Central–style create routes](#business-centralstyle-create-routes) |
 | `GET` | `/` | Bearer | Same |
 | `GET` | `/partner/:partnerNo` | Bearer | Same |
 | `GET` | `/shipment/:shipmentNo` | Bearer | Same |
@@ -768,6 +792,7 @@ Prefix: `/api/partner-location-links`
 | Method | Path | Auth | Notes |
 |--------|------|------|--------|
 | `POST` | `/` | Bearer | All standard partner roles |
+| `POST` | `/businesscentral` | Register token | Same body as `POST /`; see [Business Central–style create routes](#business-centralstyle-create-routes) |
 | `GET` | `/` | Bearer | Query: `partnerNo`, `partnerType`, `locationCode` |
 | `GET` | `/partner/:partnerNo` | Bearer | |
 | `GET` | `/partner/:partnerNo/default` | Bearer | |
@@ -879,10 +904,17 @@ HTTP status codes: `400` validation, `401` auth, `403` forbidden, `404` not foun
 | Routes | `routes/*.routes.js` |
 | Controllers | `controllers/*.js` |
 | Models / SQL mapping | `models/*.model.js` |
-| Postman collection | `PartnerPortal.postman_collection.json` |
+| Postman collection | `PartnerPortal.postman_collection.json` (regenerate with `npm run postman:generate`) |
+| Collection generator | `scripts/generate-postman-collection.js` |
 
 ---
 
-## Changelog note
+## Postman collection
 
-Duplicate `POST` handlers on the same path (e.g. `POST /api/vendor/item`, `POST /api/purchase-orders`) exist in code with different middleware; only the **first** matching Express route runs per request. Prefer cleaning duplicates in code for predictable behavior.
+Regenerate the collection from the current Express route graph (includes all `/businesscentral` routes and full example bodies):
+
+```bash
+npm run postman:generate
+```
+
+**Note:** `GET /api/routes` is registered in `app.js` only when `NODE_ENV !== "production"`. The generated Postman request is useful for local/dev debugging.

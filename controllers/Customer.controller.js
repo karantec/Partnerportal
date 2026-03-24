@@ -56,7 +56,7 @@ const register = async (req, res) => {
     }
 
     // ─── Check duplicate ref_no ───────────────────────────
-    const refNo = req.body.customerNo || req.body.vendorNo;
+    const refNo = req.body.partnerno
     if (refNo) {
       const existing = await User.findByRefNo(refNo);
       if (existing) {

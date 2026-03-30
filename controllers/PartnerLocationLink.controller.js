@@ -16,6 +16,7 @@ const createPartnerLocationLink = async (req, res) => {
         message: "Partner type is required",
       });
     }
+
     const userId = req.user ? req.user.id : null;
 
     const link = await PartnerLocationLink.create(req.body, userId);

@@ -20,8 +20,20 @@ const createPurchaseOrder = async (req, res) => {
         message: "At least one order line is required",
       });
     }
+
+    // ─── Validate status if provided ───────────────────────
+    const validStatuses = ["Open", "Pending", "Approved"];
+    const status = req.body.status || "Open";
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid status. Allowed: ${validStatuses.join(", ")}`,
+      });
+    }
+
     const userId = req.user ? req.user.id : null;
-    const order = await PurchaseOrder.create(req.body, userId);
+    const orderData = { ...req.body, status };
+    const order = await PurchaseOrder.create(orderData, userId);
 
     // ─── Send to Business Central ──────────────────────────
     let bcResponse = null;
@@ -128,6 +140,15 @@ const updatePurchaseOrder = async (req, res) => {
       });
     }
 
+    // ─── Validate status if provided ───────────────────────
+    const validStatuses = ["Open", "Pending", "Approved"];
+    if (req.body.status && !validStatuses.includes(req.body.status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid status. Allowed: ${validStatuses.join(", ")}`,
+      });
+    }
+
     const updated = await PurchaseOrder.update(req.params.id, req.body);
     res.status(200).json({
       success: true,
@@ -144,13 +165,7 @@ const updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
 
-    const validStatuses = [
-      "Processed",
-      "Pending",
-      "Approved",
-      "Rejected",
-      "Cancelled",
-    ];
+    const validStatuses = ["Open", "Pending", "Approved"];
     if (!status || !validStatuses.includes(status)) {
       return res.status(400).json({
         success: false,

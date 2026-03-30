@@ -1,7 +1,7 @@
 const { pool } = require("../config/db");
 
 const PartnerLocationLink = {
-  // ─── Create ────────────────────────────────────────────
+
   async create(data, userId) {
     const query = `
       INSERT INTO partner_location_links (
@@ -14,22 +14,22 @@ const PartnerLocationLink = {
       ) RETURNING *;
     `;
     const values = [
-      data.partnerType || null, // $1
-      data.partnerNo || null, // $2
-      data.description || null, // $3
-      data.addressCode || null, // $4
-      data.addressName || null, // $5
-      data.locationCode || null, // $6
-      data.address || null, // $7
-      data.address2 || null, // $8
-      data.city || null, // $9
-      data.postCode || null, // $10
-      data.countryRegionCode || null, // $11
-      data.contact || null, // $12
-      data.phoneNo || null, // $13
-      data.isDefault || false, // $14
-      data.blocked || false, // $15
-      userId || null, // $16
+      data.partnerType       || null,  // $1  partner_type
+      data.partnerNo         || null,  // $2  partner_no
+      data.description       || null,  // $3  description
+      data.addressCode       || null,  // $4  address_code
+      data.addressName       || null,  // $5  address_name
+      data.locationCode      || null,  // $6  location_code
+      data.address           || null,  // $7  address
+      data.address2          || null,  // $8  address2
+      data.city              || null,  // $9  city
+      data.postCode          || null,  // $10 post_code
+      data.countryRegionCode || null,  // $11 country_region_code
+      data.contact           || null,  // $12 contact
+      data.phoneNo           || null,  // $13 phone_no
+      data.isDefault         ?? false, // $14 is_default
+      data.blocked           ?? false, // $15 blocked
+      userId                 || null,  // $16 created_by
     ];
     const result = await pool.query(query, values);
     return result.rows[0];
@@ -43,7 +43,7 @@ const PartnerLocationLink = {
     return result.rows;
   },
 
-  // ─── Find by ID ────────────────────────────────────────
+  
   async findById(id) {
     const result = await pool.query(
       "SELECT * FROM partner_location_links WHERE id = $1",
@@ -100,22 +100,22 @@ const PartnerLocationLink = {
       WHERE id=$16 RETURNING *;
     `;
     const values = [
-      data.partnerType || null, // $1
-      data.partnerNo || null, // $2
-      data.description || null, // $3
-      data.addressCode || null, // $4
-      data.addressName || null, // $5
-      data.locationCode || null, // $6
-      data.address || null, // $7
-      data.address2 || null, // $8
-      data.city || null, // $9
-      data.postCode || null, // $10
-      data.countryRegionCode || null, // $11
-      data.contact || null, // $12
-      data.phoneNo || null, // $13
-      data.isDefault || false, // $14
-      data.blocked || false, // $15
-      id, // $16
+      data.partnerType       || null,  // $1  partner_type
+      data.partnerNo         || null,  // $2  partner_no
+      data.description       || null,  // $3  description
+      data.addressCode       || null,  // $4  address_code
+      data.addressName       || null,  // $5  address_name
+      data.locationCode      || null,  // $6  location_code
+      data.address           || null,  // $7  address
+      data.address2          || null,  // $8  address2
+      data.city              || null,  // $9  city
+      data.postCode          || null,  // $10 post_code
+      data.countryRegionCode || null,  // $11 country_region_code
+      data.contact           || null,  // $12 contact
+      data.phoneNo           || null,  // $13 phone_no
+      data.isDefault         ?? false, // $14 is_default
+      data.blocked           ?? false, // $15 blocked
+      id,                              // $16 id
     ];
     const result = await pool.query(query, values);
     return result.rows[0] || null;

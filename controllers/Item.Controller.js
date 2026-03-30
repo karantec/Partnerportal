@@ -1,5 +1,6 @@
 const ItemRequest = require("../models/Item.model");
 const bcService = require("../services/businessCentral.service");
+const User = require("../models/Authorization.model");
 
 // ─── Create Item Request ───────────────────────────────────
 // POST /api/items
@@ -24,15 +25,40 @@ const createItemRequest = async (req, res) => {
       }
     }
 
-    // ─── Create item ───────────────────────────────────────
+    // ─── Get authenticated user's partner number ───────────
     const userId = req.user ? req.user.id : null;
-    const item = await ItemRequest.create(req.body, userId);
+    let partnerNo = req.body.partnerNo;
+    
+    if (userId) {
+      const user = await User.findById(userId);
+      if (user && user.ref_no) {
+        partnerNo = user.ref_no; // Use authenticated user's partner number
+      }
+    }
+
+    // ─── Create item with user's partner number ────────────
+    const itemData = {
+      ...req.body,
+      partnerNo: partnerNo,
+      status: req.body.status || "Open" // Default to Open if not provided
+    };
+    
+    // ─── Validate status if provided ───────────────────────
+    const validStatuses = ["Open", "Pending", "Approved"];
+    if (itemData.status && !validStatuses.includes(itemData.status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid status. Allowed: ${validStatuses.join(", ")}`,
+      });
+    }
+    
+    const item = await ItemRequest.create(itemData, userId);
 
     // ─── Send to Business Central ──────────────────────────
     let bcResponse = null;
     let bcError = null;
     try {
-      bcResponse = await bcService.createItemRequest(req.body);
+      bcResponse = await bcService.createItemRequest(itemData);
       console.log("✅ Item synced to Business Central:", bcResponse);
     } catch (bcErr) {
       bcError = bcErr.response?.data || bcErr.message;
@@ -41,7 +67,7 @@ const createItemRequest = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "Item request created successfully",
+      message: "Item request Created successfully",
       data: item,
       businessCentral: {
         synced: !!bcResponse,
@@ -56,19 +82,42 @@ const createItemRequest = async (req, res) => {
 
 // ─── Get All Item Requests ─────────────────────────────────
 // GET /api/items
-// GET /api/items?status=Created
+// GET /api/items?status=Open
 // GET /api/items?partnerNo=VNR000001
 const getAllItemRequests = async (req, res) => {
   try {
     const { status, partnerNo } = req.query;
+    const { role, id: userId } = req.user;
 
     let items;
-    if (status) {
-      items = await ItemRequest.findByStatus(status);
-    } else if (partnerNo) {
-      items = await ItemRequest.findByPartnerNo(partnerNo);
+    
+    // ─── Vendors see only their own items ──────────────────
+    if (role === "vendor" || role === "vendor_admin") {
+      const user = await User.findById(userId);
+      const userPartnerNo = user?.ref_no;
+      
+      if (status) {
+        items = await ItemRequest.findByStatus(status);
+        items = items.filter(item => item.partner_no === userPartnerNo);
+      } else if (partnerNo) {
+        // Vendors can only see their own partner items
+        if (partnerNo === userPartnerNo) {
+          items = await ItemRequest.findByPartnerNo(partnerNo);
+        } else {
+          items = [];
+        }
+      } else {
+        items = await ItemRequest.findByPartnerNo(userPartnerNo);
+      }
     } else {
-      items = await ItemRequest.findAll();
+      // ─── Admins see all items ──────────────────────────────
+      if (status) {
+        items = await ItemRequest.findByStatus(status);
+      } else if (partnerNo) {
+        items = await ItemRequest.findByPartnerNo(partnerNo);
+      } else {
+        items = await ItemRequest.findAll();
+      }
     }
 
     res.status(200).json({
@@ -113,8 +162,7 @@ const getItemsByPartner = async (req, res) => {
   }
 };
 
-// ─── Update Item Request ───────────────────────────────────
-// PUT /api/items/:id
+
 const updateItemRequest = async (req, res) => {
   try {
     // ─── Check item exists ─────────────────────────────────
@@ -126,11 +174,20 @@ const updateItemRequest = async (req, res) => {
       });
     }
 
-    // ─── Only allow update if status is Created ────────────
-    if (item.status !== "Created") {
+    // ─── Only allow update if status is Open ────────────
+    if (item.status !== "Open") {
       return res.status(400).json({
         success: false,
-        message: `Cannot update item with status: ${item.status}. Only 'Created' items can be updated`,
+        message: `Cannot update item with status: ${item.status}. Only 'Open' items can be updated`,
+      });
+    }
+
+    // ─── Validate status if provided ───────────────────────
+    const validStatuses = ["Open", "Pending", "Approved"];
+    if (itemData.status && !validStatuses.includes(itemData.status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid status. Allowed: ${validStatuses.join(", ")}`,
       });
     }
 
@@ -143,6 +200,14 @@ const updateItemRequest = async (req, res) => {
           message: "Batch number already exists",
         });
       }
+    }
+
+    // ─── Validate status if provided ───────────────────────
+    if (req.body.status && !validStatuses.includes(req.body.status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid status. Allowed: ${validStatuses.join(", ")}`,
+      });
     }
 
     const updated = await ItemRequest.update(req.params.id, req.body);
@@ -163,7 +228,7 @@ const updateItemStatus = async (req, res) => {
     const { status, rejectionReason } = req.body;
 
     // ─── Validate status ───────────────────────────────────
-    const validStatuses = ["Created", "Pending", "Approved", "Rejected"];
+    const validStatuses = ["Open", "Pending", "Approved"];
     if (!status) {
       return res.status(400).json({
         success: false,
@@ -256,19 +321,18 @@ const deleteItemRequest = async (req, res) => {
       });
     }
 
-    // ─── Only allow delete if status is Created ────────────
-    if (item.status !== "Created") {
+    // ─── Only allow delete if status is Open ────────────
+    if (item.status !== "Open") {
       return res.status(400).json({
         success: false,
-        message: `Cannot delete item with status: ${item.status}. Only 'Created' items can be deleted`,
+        message: `Cannot delete item with status: ${item.status}. Only 'Open' items can be deleted`,
       });
     }
 
-    const deleted = await ItemRequest.delete(req.params.id);
+    await ItemRequest.delete(req.params.id);
     res.status(200).json({
       success: true,
       message: "Item request deleted successfully",
-      data: deleted,
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

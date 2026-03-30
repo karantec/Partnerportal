@@ -11,7 +11,16 @@ const createPartnerLocationLink = async (req, res) => {
     }
 
     const userId = req.user ? req.user.id : null;
-
+    
+if (req.body.locationCode){
+  const existing = await PartnerLocationLink.findByLocationCode(req.body.locationCode);
+  if (existing) {
+    return res.status(400).json({
+          success: false,
+          message: "Location  already exists",
+        });
+  }
+}
     const link = await PartnerLocationLink.create(req.body, userId);
     res.status(201).json({
       success: true,

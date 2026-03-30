@@ -14,6 +14,7 @@ const createItemRequest = async (req, res) => {
       });
     }
 
+    
     // ─── Check duplicate batchNo ───────────────────────────
     if (req.body.batchNo) {
       const existing = await ItemRequest.findByBatchNo(req.body.batchNo);

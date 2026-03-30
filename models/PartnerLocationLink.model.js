@@ -7,9 +7,9 @@ const PartnerLocationLink = {
       INSERT INTO partner_location_links (
         location_code, description, address_name, address, address2,
         city, post_code, country_region_code, contact, phone_no,
-        is_default, blocked, created_by
+        is_default, blocked
       ) VALUES (
-        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12
       ) RETURNING *;
     `;
     const values = [
@@ -25,7 +25,6 @@ const PartnerLocationLink = {
       data.phoneNo           || null,  // $10 phone_no
       data.isDefault         ?? false, // $11 is_default
       data.blocked           ?? false, // $12 blocked
-      userId                 || null,  // $13 created_by
     ];
     const result = await pool.query(query, values);
     return result.rows[0];

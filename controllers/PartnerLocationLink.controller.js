@@ -3,17 +3,10 @@ const PartnerLocationLink = require("../models/PartnerLocationLink.model");
 // ─── Create ────────────────────────────────────────────────
 const createPartnerLocationLink = async (req, res) => {
   try {
-    if (!req.body.partnerNo) {
+    if (!req.body.locationCode) {
       return res.status(400).json({
         success: false,
-        message: "Partner number is required",
-      });
-    }
-
-    if (!req.body.partnerType) {
-      return res.status(400).json({
-        success: false,
-        message: "Partner type is required",
+        message: "Location code is required",
       });
     }
 
@@ -33,14 +26,10 @@ const createPartnerLocationLink = async (req, res) => {
 // ─── Get All ───────────────────────────────────────────────
 const getAllPartnerLocationLinks = async (req, res) => {
   try {
-    const { partnerNo, partnerType, locationCode } = req.query;
+    const { locationCode } = req.query;
 
     let links;
-    if (partnerNo) {
-      links = await PartnerLocationLink.findByPartnerNo(partnerNo);
-    } else if (partnerType) {
-      links = await PartnerLocationLink.findByPartnerType(partnerType);
-    } else if (locationCode) {
+    if (locationCode) {
       links = await PartnerLocationLink.findByLocationCode(locationCode);
     } else {
       links = await PartnerLocationLink.findAll();
@@ -72,32 +61,14 @@ const getPartnerLocationLinkById = async (req, res) => {
   }
 };
 
-// ─── Get by Partner No ─────────────────────────────────────
-const getLinksByPartner = async (req, res) => {
+// ─── Get Default Location ──────────────────────────────────
+const getDefaultLocation = async (req, res) => {
   try {
-    const links = await PartnerLocationLink.findByPartnerNo(
-      req.params.partnerNo,
-    );
-    res.status(200).json({
-      success: true,
-      count: links.length,
-      data: links,
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// ─── Get Default by Partner No ─────────────────────────────
-const getDefaultLinkByPartner = async (req, res) => {
-  try {
-    const link = await PartnerLocationLink.findDefaultByPartnerNo(
-      req.params.partnerNo,
-    );
+    const link = await PartnerLocationLink.findDefault();
     if (!link) {
       return res.status(404).json({
         success: false,
-        message: "No default location found for this partner",
+        message: "No default location found",
       });
     }
     res.status(200).json({ success: true, data: link });
@@ -184,7 +155,6 @@ const updateDefaultStatus = async (req, res) => {
 
     const updated = await PartnerLocationLink.updateDefault(
       req.params.id,
-      link.partner_no,
       isDefault,
     );
 
@@ -224,8 +194,7 @@ module.exports = {
   createPartnerLocationLink,
   getAllPartnerLocationLinks,
   getPartnerLocationLinkById,
-  getLinksByPartner,
-  getDefaultLinkByPartner,
+  getDefaultLocation,
   updatePartnerLocationLink,
   updateBlockStatus,
   updateDefaultStatus,

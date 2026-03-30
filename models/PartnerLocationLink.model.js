@@ -5,37 +5,32 @@ const PartnerLocationLink = {
   async create(data, userId) {
     const query = `
       INSERT INTO partner_location_links (
-        partner_type, partner_no, description, address_code,
-        address_name, location_code, address, address2,
-        city, post_code, country_region_code, contact,
-        phone_no, is_default, blocked, created_by
+        location_code, description, address_name, address, address2,
+        city, post_code, country_region_code, contact, phone_no,
+        is_default, blocked, created_by
       ) VALUES (
-        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13
       ) RETURNING *;
     `;
     const values = [
-      data.partnerType       || null,  // $1  partner_type
-      data.partnerNo         || null,  // $2  partner_no
-      data.description       || null,  // $3  description
-      data.addressCode       || null,  // $4  address_code
-      data.addressName       || null,  // $5  address_name
-      data.locationCode      || null,  // $6  location_code
-      data.address           || null,  // $7  address
-      data.address2          || null,  // $8  address2
-      data.city              || null,  // $9  city
-      data.postCode          || null,  // $10 post_code
-      data.countryRegionCode || null,  // $11 country_region_code
-      data.contact           || null,  // $12 contact
-      data.phoneNo           || null,  // $13 phone_no
-      data.isDefault         ?? false, // $14 is_default
-      data.blocked           ?? false, // $15 blocked
-      userId                 || null,  // $16 created_by
+      data.locationCode      || null,  // $1  location_code
+      data.description       || null,  // $2  description
+      data.addressName       || null,  // $3  address_name
+      data.address           || null,  // $4  address
+      data.address2          || null,  // $5  address2
+      data.city              || null,  // $6  city
+      data.postCode          || null,  // $7  post_code
+      data.countryRegionCode || null,  // $8  country_region_code
+      data.contact           || null,  // $9  contact
+      data.phoneNo           || null,  // $10 phone_no
+      data.isDefault         ?? false, // $11 is_default
+      data.blocked           ?? false, // $12 blocked
+      userId                 || null,  // $13 created_by
     ];
     const result = await pool.query(query, values);
     return result.rows[0];
   },
 
-  // ─── Find All ──────────────────────────────────────────
   async findAll() {
     const result = await pool.query(
       "SELECT * FROM partner_location_links ORDER BY created_at DESC",
@@ -43,7 +38,6 @@ const PartnerLocationLink = {
     return result.rows;
   },
 
-  
   async findById(id) {
     const result = await pool.query(
       "SELECT * FROM partner_location_links WHERE id = $1",
@@ -52,25 +46,6 @@ const PartnerLocationLink = {
     return result.rows[0] || null;
   },
 
-  // ─── Find by Partner No ────────────────────────────────
-  async findByPartnerNo(partnerNo) {
-    const result = await pool.query(
-      "SELECT * FROM partner_location_links WHERE partner_no = $1 ORDER BY created_at DESC",
-      [partnerNo],
-    );
-    return result.rows;
-  },
-
-  // ─── Find by Partner Type ──────────────────────────────
-  async findByPartnerType(partnerType) {
-    const result = await pool.query(
-      "SELECT * FROM partner_location_links WHERE partner_type = $1 ORDER BY created_at DESC",
-      [partnerType],
-    );
-    return result.rows;
-  },
-
-  // ─── Find by Location Code ─────────────────────────────
   async findByLocationCode(locationCode) {
     const result = await pool.query(
       "SELECT * FROM partner_location_links WHERE location_code = $1 ORDER BY created_at DESC",
@@ -79,49 +54,41 @@ const PartnerLocationLink = {
     return result.rows;
   },
 
-  // ─── Find Default by Partner No ────────────────────────
-  async findDefaultByPartnerNo(partnerNo) {
+  async findDefault() {
     const result = await pool.query(
-      "SELECT * FROM partner_location_links WHERE partner_no = $1 AND is_default = true",
-      [partnerNo],
+      "SELECT * FROM partner_location_links WHERE is_default = true LIMIT 1",
     );
     return result.rows[0] || null;
   },
 
-  // ─── Update ────────────────────────────────────────────
   async update(id, data) {
     const query = `
       UPDATE partner_location_links SET
-        partner_type=$1, partner_no=$2, description=$3,
-        address_code=$4, address_name=$5, location_code=$6,
-        address=$7, address2=$8, city=$9, post_code=$10,
-        country_region_code=$11, contact=$12, phone_no=$13,
-        is_default=$14, blocked=$15, updated_at=NOW()
-      WHERE id=$16 RETURNING *;
+        location_code=$1, description=$2, address_name=$3,
+        address=$4, address2=$5, city=$6, post_code=$7,
+        country_region_code=$8, contact=$9, phone_no=$10,
+        is_default=$11, blocked=$12, updated_at=NOW()
+      WHERE id=$13 RETURNING *;
     `;
     const values = [
-      data.partnerType       || null,  // $1  partner_type
-      data.partnerNo         || null,  // $2  partner_no
-      data.description       || null,  // $3  description
-      data.addressCode       || null,  // $4  address_code
-      data.addressName       || null,  // $5  address_name
-      data.locationCode      || null,  // $6  location_code
-      data.address           || null,  // $7  address
-      data.address2          || null,  // $8  address2
-      data.city              || null,  // $9  city
-      data.postCode          || null,  // $10 post_code
-      data.countryRegionCode || null,  // $11 country_region_code
-      data.contact           || null,  // $12 contact
-      data.phoneNo           || null,  // $13 phone_no
-      data.isDefault         ?? false, // $14 is_default
-      data.blocked           ?? false, // $15 blocked
-      id,                              // $16 id
+      data.locationCode      || null,  // $1  location_code
+      data.description       || null,  // $2  description
+      data.addressName       || null,  // $3  address_name
+      data.address           || null,  // $4  address
+      data.address2          || null,  // $5  address2
+      data.city              || null,  // $6  city
+      data.postCode          || null,  // $7  post_code
+      data.countryRegionCode || null,  // $8  country_region_code
+      data.contact           || null,  // $9  contact
+      data.phoneNo           || null,  // $10 phone_no
+      data.isDefault         ?? false, // $11 is_default
+      data.blocked           ?? false, // $12 blocked
+      id,                              // $13 id
     ];
     const result = await pool.query(query, values);
     return result.rows[0] || null;
   },
 
-  // ─── Update Block Status ───────────────────────────────
   async updateBlocked(id, blocked) {
     const result = await pool.query(
       `UPDATE partner_location_links SET blocked=$1, updated_at=NOW()
@@ -131,22 +98,18 @@ const PartnerLocationLink = {
     return result.rows[0] || null;
   },
 
-  // ─── Update Default Status ─────────────────────────────
-  async updateDefault(id, partnerNo, isDefault) {
+  async updateDefault(id, isDefault) {
     const client = await pool.connect();
     try {
       await client.query("BEGIN");
 
-      // ─── Remove default from all partner locations ───────
       if (isDefault) {
         await client.query(
-          `UPDATE partner_location_links SET is_default=false
-           WHERE partner_no=$1 AND id != $2`,
-          [partnerNo, id],
+          `UPDATE partner_location_links SET is_default=false WHERE id != $1`,
+          [id],
         );
       }
 
-      // ─── Set default on this location ────────────────────
       const result = await client.query(
         `UPDATE partner_location_links SET is_default=$1, updated_at=NOW()
          WHERE id=$2 RETURNING *`,
@@ -163,7 +126,6 @@ const PartnerLocationLink = {
     }
   },
 
-  // ─── Delete ────────────────────────────────────────────
   async delete(id) {
     const result = await pool.query(
       "DELETE FROM partner_location_links WHERE id = $1 RETURNING *",

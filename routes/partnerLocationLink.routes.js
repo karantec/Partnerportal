@@ -4,8 +4,7 @@ const {
   createPartnerLocationLink,
   getAllPartnerLocationLinks,
   getPartnerLocationLinkById,
-  getLinksByPartner,
-  getDefaultLinkByPartner,
+  getDefaultLocation,
   updatePartnerLocationLink,
   updateBlockStatus,
   updateDefaultStatus,
@@ -45,7 +44,7 @@ router.get(
   getAllPartnerLocationLinks,
 );
 router.get(
-  "/partner/:partnerNo",
+  "/default",
   protect,
   authorizeRoles(
     "customer",
@@ -54,19 +53,7 @@ router.get(
     "vendor_admin",
     "super_admin",
   ),
-  getLinksByPartner,
-);
-router.get(
-  "/partner/:partnerNo/default",
-  protect,
-  authorizeRoles(
-    "customer",
-    "vendor",
-    "customer_admin",
-    "vendor_admin",
-    "super_admin",
-  ),
-  getDefaultLinkByPartner,
+  getDefaultLocation,
 );
 router.get(
   "/:id",

@@ -1,6 +1,6 @@
 const { pool } = require("../config/db");
 
-const ItemRequest = {
+const Item = {
   async create(data, userId) {
     const query = `
       INSERT INTO item_requests (
@@ -142,4 +142,4 @@ const ItemRequest = {
   },
 };
 
-module.exports = ItemRequest;
+module.exports = Item;
